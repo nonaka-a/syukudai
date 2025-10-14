@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- グローバル変数 ---
     let totalDamageToDeal = 0;
@@ -8,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // セーブデータ管理用の変数
     let currentSaveSlot = 1;
-    const SAVE_DATA_KEY_PREFIX = 'shukudaiQuestData_';
+    const SAVE_DATA_KEY_PREFIX = 'shukudaiQuestData_'; // プロジェクト名変更により、キープレフィックスも変更しても良いが、既存のセーブデータ互換性のため今回は維持
     const LAST_SLOT_KEY = 'shukudaiQuestLastSlot';
 
     const MONSTERS = MONSTERS_DATA;
@@ -19,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         damage: new Audio('sounds/se_damage.mp3'),
         defeat: new Audio('sounds/se_defeat.mp3'),
         fanfare: new Audio('sounds/se_fanfare.mp3'),
-        charge: new Audio('sounds/se_charge.mp3')
+        charge: new Audio('sounds/se_charge.mpm3')
     };
     sounds.bgmBattle.loop = true;
     sounds.bgmBattle.volume = 0.5;
@@ -364,6 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.messageText.textContent = ''; 
         ui.completeMessageContainer.classList.remove('show'); 
 
+        // 背景設定はプリロード済みなので直接設定
         if (monster && monster.background) {
             screens.battle.style.backgroundImage = `url('BG/${monster.background}')`;
         } else {
@@ -571,6 +573,22 @@ document.addEventListener('DOMContentLoaded', () => {
             updatePlayerSwitchUI();
         }
     };
+
+    // --- 新しい関数: 画像プリロード ---
+    const preloadImages = (imageUrls) => {
+        const promises = imageUrls.map(url => {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.src = url;
+                img.onload = () => resolve();
+                img.onerror = () => {
+                    console.warn(`画像の読み込みに失敗しました: ${url}`);
+                    resolve(); // 失敗しても他の画像読み込みをブロックしない
+                };
+            });
+        });
+        return Promise.all(promises);
+    };
     
     const initializeApp = () => {
         const lastSlot = localStorage.getItem(LAST_SLOT_KEY);
@@ -618,7 +636,25 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.zukanModalContent.addEventListener('click', (e) => e.stopPropagation());
         ui.completeMessageContainer.addEventListener('click', () => { ui.completeMessageContainer.classList.remove('show'); });
         
-        switchScreen('title');
+        // --- 画像プリロードの実行 ---
+        const backgroundUrls = MONSTERS
+            .filter(m => m.background)
+            .map(m => `BG/${m.background}`);
+        
+        // タイトル画面の背景もプリロード
+        backgroundUrls.push('bg_title.png');
+        backgroundUrls.push('bg_battle.png'); // デフォルトのバトル背景
+
+        console.log('背景画像をプリロード中...');
+        preloadImages(Array.from(new Set(backgroundUrls))) // 重複を排除
+            .then(() => {
+                console.log('背景画像のプリロードが完了しました。');
+                switchScreen('title'); // プリロード完了後にタイトル画面を表示
+            })
+            .catch(error => {
+                console.error('背景画像のプリロード中にエラーが発生しました:', error);
+                switchScreen('title'); // エラー時もタイトル画面を表示
+            });
     };
     
     // --- イベントリスナー設定 ---
@@ -631,7 +667,22 @@ document.addEventListener('DOMContentLoaded', () => {
         switchScreen('title');
     });
     buttons.confirmBack.addEventListener('click', () => switchScreen('title'));
-    buttons.goToBattle.addEventListener('click', () => startBattle(totalDamageToDeal));
+    buttons.goToBattle.addEventListener('click', () => {
+        const currentMonsterId = BATTLE_ORDER[gameState.currentBattleIndex];
+        const monster = MONSTERS.find(m => m.id === currentMonsterId);
+        
+        // バトル開始前に背景画像をプリロード
+        const bgUrl = (monster && monster.background) ? `BG/${monster.background}` : 'bg_battle.png';
+        
+        // プリロードの完了を待ってからバトルを開始
+        preloadImages([bgUrl]).then(() => {
+            startBattle(totalDamageToDeal);
+        }).catch(error => {
+            console.error('バトル背景のプリロードに失敗しました:', error);
+            // エラーが発生してもバトルは開始する
+            startBattle(totalDamageToDeal);
+        });
+    });
 
     buttons.confirm.addEventListener('click', () => {
         switchScreen('confirm');
@@ -651,6 +702,7 @@ document.addEventListener('DOMContentLoaded', () => {
             gameState.player.name = newName;
             saveGameData();
             alert('なまえをへんこうしたよ！');
+            ui.titlePlayerName.textContent = `${gameState.player.name} の`; // タイトル画面の名前も更新
         } else {
             alert('なまえは1～8もじでいれてね。');
         }
@@ -728,3 +780,4 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 初期化処理 ---
     initializeApp();
 });
+        
