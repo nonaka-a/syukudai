@@ -1,0 +1,565 @@
+
+
+/* --- RPG風デザイン (リッチ版) --- */
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800&display=swap');
+
+/* 基本スタイル */
+body { font-family: 'M PLUS Rounded 1c', sans-serif; background: radial-gradient(circle, #5a3f2e, #3d2a16); color: #4a2c0f; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; -webkit-user-select: none; user-select: none; overflow: hidden; }
+#game-container { width: 95vw; height: 90vh; max-width: 1000px; max-height: 600px; background-color: #f5e8c8; background-image: linear-gradient(rgba(222, 184, 135, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(222, 184, 135, 0.2) 1px, transparent 1px); background-size: 20px 20px; border-radius: 20px; border: 12px solid transparent; border-image: linear-gradient(145deg, #a05a2c, #e08a50, #a05a2c) 1; box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 0 25px rgba(0,0,0,0.4); padding: 20px; box-sizing: border-box; text-align: center; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden; z-index: 10; }
+
+/* 画面の表示・非表示 */
+.screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; position: absolute; top: 0; left: 0; padding: 20px; box-sizing: border-box; background-color: transparent; }
+.screen.active { display: flex; }
+.screen-title { font-size: 2.2rem; color: #8b4513; text-shadow: 1px 1px 1px #fff; margin-bottom: 20px; }
+
+/* ★★★★★ START: このスタイルを追加 ★★★★★ */
+#title-player-name {
+    position: absolute;
+    top: 18%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: clamp(3.4rem, 6vw, 2.5rem);
+    font-weight: 1000; /* 太文字 */
+    
+    /* グラデーションテキストの設定 */
+    background: linear-gradient(to bottom, #62a9ff, #2c7de2);
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    
+    /* ★★★★★ START: この部分を修正 ★★★★★ */
+    /* text-shadow を使わず、text-stroke で縁取りを表現 */
+    -webkit-text-stroke: 4px #000; /* 3pxの黒い縁取り */
+    paint-order: stroke fill; /* 縁取りを文字の背面に描画する設定 */
+    /* text-shadow: 
+        -3px -3px 0 #000,  
+         3px -3px 0 #000,
+        -3px  3px 0 #000,
+         3px  3px 0 #000; */
+    /* ★★★★★ END: この部分を修正 ★★★★★ */
+
+    z-index: 1; /* ロゴの手前に表示 */
+    white-space: nowrap;
+}
+/* ★★★★★ END: このスタイルを追加 ★★★★★ */
+
+/* タイトル */
+#title-logo {
+    width: 100%;
+    max-width: 700px;
+    height: auto;
+    margin-bottom: -100px;
+    filter: drop-shadow(0px 3px 3px rgba(0,0,0,0.5));
+}
+/* テキスト */
+.prompt { font-size: clamp(1.8rem, 6vw, 2.5rem); margin-bottom: 10px; padding-top: 20px; }
+.support-text { font-size: clamp(0.9rem, 3vw, 1.1rem); color: #6b4a2f; margin-bottom: 20px; }
+#current-time-container { position: absolute; bottom: 20px; right: 30px; font-size: 1.2rem; background: rgba(0,0,0,0.1); padding: 5px 15px; border-radius: 15px; }
+
+/* ボタン */
+.btn { font-size: clamp(1.1rem, 4vw, 1.4rem); font-weight: 700; padding: 10px 25px; border: 2px solid rgba(0,0,0,0.2); border-top-color: rgba(255,255,255,0.3); border-bottom-color: rgba(0,0,0,0.4); border-radius: 50px; cursor: pointer; background: linear-gradient(to bottom, #f8c97c, #f0ad4e 49%, #e6952c 51%); color: #fff; text-shadow: 0 -1px 1px rgba(0,0,0,0.5); box-shadow: 0 6px 0 #c8872b, 0 8px 10px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.3); transition: all 0.1s ease; margin: 10px; white-space: nowrap; position: relative; }
+.btn:hover { filter: brightness(1.1); }
+.btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #c8872b, 0 4px 5px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.3); }
+.btn-large { font-size: clamp(1.6rem, 5vw, 2rem); padding: 15px 40px; }
+.btn-secondary { background: linear-gradient(to bottom, #c0c0c0, #a9a9a9 49%, #888 51%); box-shadow: 0 6px 0 #666, 0 8px 10px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.3); }
+.btn-secondary:active { box-shadow: 0 2px 0 #666, 0 4px 5px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.3); }
+.menu-buttons, .timer-setting-buttons { display: flex; flex-direction: column; align-items: center; }
+.timer-setting-buttons { margin-top: 20px; }
+
+/* ダイヤルピッカー */
+.picker-container { display: flex; justify-content: center; align-items: center; height: 180px; position: relative; }
+.picker-column { height: 100%; overflow: hidden; width: 80px; touch-action: none; }
+.picker-list { transition: transform 0.2s ease-out; }
+.picker-list div { height: 60px; line-height: 60px; font-size: 2.5rem; }
+.picker-label { font-size: 1.5rem; align-self: center; margin: 0 10px; }
+.picker-highlight { position: absolute; top: 50%; left: 50%; width: 240px; height: 60px; transform: translate(-50%, -50%); border-top: 2px solid #c8bba3; border-bottom: 2px solid #c8bba3; pointer-events: none; }
+
+/* 集中フェーズ画面スタイル */
+#concentration-screen { display: none; background-color: #000; color: #fff; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; max-width: none; max-height: none; border-radius: 0; padding: 20px; box-sizing: border-box; justify-content: center; z-index: 100; border: none; box-shadow: none; flex-direction: column; align-items: center; }
+#timer-display { font-size: clamp(8rem, 25vw, 14rem); font-weight: 700; font-family: 'Courier New', Courier, monospace; transform: translateZ(0); }
+#stop-timer-button { background-color: #d9534f; box-shadow: 0 6px #b52b27; border: 2px solid rgba(0,0,0,0.2); border-top-color: rgba(255,255,255,0.3); }
+#stop-timer-button:active { box-shadow: 0 2px #b52b27; }
+
+/* リザルト画面 */
+#result-title, #total-damage-message { font-size: 2.2rem; font-weight: 800; color: #d2691e; text-shadow: 1px 1px #fff; }
+#result-title { margin-bottom: 20px; }
+#total-damage-message { margin-top: 10px; margin-bottom: 20px; }
+#total-damage-message span { font-size: 3rem; }
+.result-item { font-size: 1.6rem; margin: 8px 0; padding: 10px; background: rgba(255,255,255,0.6); border-radius: 10px; border-bottom: 3px solid rgba(0,0,0,0.1); width: 90%; max-width: 550px; }
+.result-item span { font-weight: 800; color: #c0392b; }
+.result-calc { font-size: 1.2rem; color: #6b4a2f; margin-bottom: 8px; margin-top: 5px; }
+
+/* バトル画面 */
+#battle-screen {
+    background-image: url('bg_battle.png');
+    background-size: cover;
+    background-position: center;
+}.battle-stage { width: 100%; height: 70%; position: relative; }
+.character-area { position: absolute; width: 45%; display: flex; flex-direction: column; align-items: center; }
+#player-area { bottom: 10px; left: 5%; transform: scale(1.1); z-index: 10; }
+#monster-area { top: 20px; z-index: 5; flex-direction: row; align-items: flex-start; justify-content: flex-end; width: 100%; gap: 15px; padding-right: 5%; box-sizing: border-box; }
+.character-name { font-size: 1.5rem; font-weight: bold; background-color: rgba(255, 255, 255, 0.9); padding: 5px 20px; border-radius: 20px; border: 3px solid #4a2c0f; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.character-sprite { width: 150px; height: 150px; margin-bottom: 10px; position: relative; }
+#player-sprite {
+    width: 250px;  /* サイズを大きくします */
+    height: 250px; /* サイズを大きくします */
+    background-image: url('player.png');
+    background-size: contain; /* 画像がはみ出ないように調整します */
+    background-position: bottom center; /* 画像をエリアの下中央に配置します */
+    background-repeat: no-repeat;
+}
+
+#monster-sprite { transition: background-color 0.3s; }
+.hp-bar-container { width: 100%; max-width: 280px; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
+.hp-bar-label { text-align: left; font-size: 1rem; color: white; text-shadow: 1px 1px 2px black; font-weight: 700; }
+.hp-bar { flex-grow: 1; height: 25px; background-color: rgba(0,0,0,0.3); border-radius: 25px; border: 3px solid #fff; overflow: hidden; box-shadow: inset 2px 2px 5px rgba(0,0,0,0.5); position: relative; }
+.hp-bar::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%; background: linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(255,255,255,0.1)); border-radius: 25px 25px 0 0; }
+.hp-value { height: 100%; background: linear-gradient(to bottom, #f8e364, #f5b800); border-radius: 20px; transition: width 0.5s ease-in-out; }
+#message-window { width: 100%; height: 30%; background-color: rgba(0, 0, 0, 0.8); color: white; border: 8px solid; border-image: linear-gradient(145deg, #a05a2c, #e08a50, #a05a2c) 1; border-radius: 10px; padding: 15px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+#message-text { font-size: 1.6rem; margin: 0; text-shadow: 2px 2px 3px #000; }
+
+/* かくにん画面 */
+.confirm-header { position: relative; display: flex; justify-content: center; align-items: center; width: 100%; height: 60px; margin-bottom: 10px; }
+#confirm-page-title { margin: 0 20px; white-space: nowrap; background: linear-gradient(to right, #e08a50, #f8c97c, #e08a50); color: #4a2c0f; padding: 5px 20px; border-radius: 30px; border: 3px solid #a05a2c; box-shadow: 0 4px 8px rgba(0,0,0,0.3); flex-shrink: 1; }
+#confirm-pages-container { width: 100%; height: calc(100% - 70px); position: relative; }
+.confirm-page { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; }
+.confirm-page.active { display: flex; }
+.page-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 50px; height: 50px; font-size: 1.5rem; line-height: 50px; padding: 0; text-align: center; background: linear-gradient(to bottom, #c0c0c0, #a9a9a9 49%, #888 51%); box-shadow: 0 6px 0 #666, 0 8px 10px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.3); border-radius: 50%; border: 2px solid rgba(0,0,0,0.2); border-top-color: rgba(255,255,255,0.3); border-bottom-color: rgba(0,0,0,0.4); color: #fff; text-shadow: 0 -1px 1px rgba(0,0,0,0.5); cursor: pointer; transition: all 0.1s ease; z-index: 10; margin: 0; }
+.page-nav-btn:active { transform: translateY(-50%) scale(0.9); box-shadow: 0 2px 0 #666; }
+#prev-page-button { left: 0; }
+#next-page-button { right: 0; }
+#confirm-back-button { transform: scale(0.8); margin: 0 20px; flex-shrink: 0; }
+
+/* ステータスかくにん画面 */
+#status-check-display { display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; }
+#status-monster-name { font-size: 2rem; margin-bottom: 10px; }
+#status-hp-bar-container { width: 80%; max-width: 400px; color: #4a2c0f; text-shadow: none; }
+#status-monster-hp-bar { border-color: #a07c54; }
+#status-monster-sprite { margin-bottom: 15px; }
+
+/* なまえせってい画面 */
+#name-setting-page {
+    overflow-y: auto; /* ★ この行を追加 */
+    padding-bottom: 20px; /* ★ この行を追加 */
+}
+.rpg-input { width: 80%; max-width: 400px; padding: 10px; font-size: 1.5rem; font-family: 'M PLUS Rounded 1c', sans-serif; text-align: center; border: 3px solid #a07c54; border-radius: 10px; background-color: #fff; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+#name-setting-page .support-text { margin-top: auto; }
+#name-setting-page .btn { margin-bottom: 10px; }
+#name-setting-page #save-name-button { margin-bottom: auto; }
+
+/* ずかん・記録画面共通 */
+.list-container, .grid-container { width: 100%; height: 100%; overflow-y: auto; background: rgba(255, 255, 255, 0.5); border: 3px solid #c8bba3; border-radius: 10px; padding: 10px; box-sizing: border-box; box-shadow: inset 0 0 10px rgba(0,0,0,0.2); }
+.grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; }
+.zukan-card { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff; border-radius: 10px; padding: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 2px solid #c8bba3; transition: transform 0.2s, box-shadow 0.2s; }
+/* ★★★★★ START: ここから変更 ★★★★★ */
+.zukan-card.unlocked { cursor: pointer; }
+.zukan-card.unlocked:hover { transform: translateY(-5px); box-shadow: 0 8px 12px rgba(0,0,0,0.2); }
+/* ★★★★★ END: ここまで変更 ★★★★★ */
+.zukan-card.locked { background: #ccc; }
+.zukan-sprite { width: 80px; height: 80px; margin: 0 auto; }
+.zukan-sprite.locked { filter: brightness(0); opacity: 0.8; }
+.zukan-name { margin-top: 5px; font-weight: bold; font-size: 0.7rem; }
+.history-item { display: flex; justify-content: space-between; padding: 12px; background: white; border-radius: 5px; margin-bottom: 8px; font-size: 1rem; box-shadow: 0 2px 3px rgba(0,0,0,0.05); }
+.history-item span { flex-basis: 20%; text-align: center; }
+.history-header { font-weight: 800; background: none; border-bottom: 3px solid #c8bba3; color: #8b4513; box-shadow: none; }
+.hp-text { font-size: 1.1rem; font-weight: 700; color: #fff; text-shadow: 1px 1px 2px #000; white-space: nowrap; }
+#status-hp-bar-container .hp-text { color: #4a2c0f; text-shadow: none; }
+.btn-danger { background: linear-gradient(to bottom, #f08080, #d9534f 49%, #c9302c 51%); box-shadow: 0 6px 0 #a94442, 0 8px 10px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.3); }
+.btn-danger:active { transform: translateY(4px); box-shadow: 0 2px 0 #a94442, 0 4px 5px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.3); }
+#reset-confirmation-area { margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 10px; border: 1px solid #c8bba3; width: 90%; max-width: 450px; box-sizing: border-box; }
+#reset-confirmation-area p { margin: 5px 0 10px; }
+#reset-confirmation-area .rpg-input { width: 120px; margin-bottom: 10px; }
+#reset-confirmation-area .btn { transform: scale(0.9); margin: 5px; }
+.concentration-buttons { position: absolute; bottom: 5vh; display: flex; align-items: center; gap: 20px; }
+
+/* ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★ */
+/* ★★★★★★★ 以下が最終的な修正箇所です ★★★★★★★ */
+/* ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★ */
+
+/* モンスター名専用のスタイル */
+#monster-area .character-name {
+    background: linear-gradient(to bottom, #6d5a49, #4a3c31);
+    color: #f5e8c8;
+    border: 3px solid #3d2a16;
+    border-radius: 8px;
+    padding: 6px 25px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.2);
+    text-shadow: 1px 1px 2px #2b1d0f;
+    font-weight: 700;
+    position: relative;
+    z-index: 6;
+    /* widthプロパティは削除し、テキストの長さに合わせる */
+}
+
+/* プレイヤー名専用のスタイル */
+#player-area .character-name {
+    position: absolute;
+    top: 20px; /* この値を大きくすると、さらに下に移動します */
+    left: -20px;
+    background: linear-gradient(to bottom, #3a5a8a, #2c4a7a);
+    color: #d0e0f8;
+    border: 3px solid #1e3a6a;
+    border-radius: 8px;
+    padding: 6px 25px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.2);
+    text-shadow: 1px 1px 2px #1a2c4a;
+    font-weight: 700;
+}
+
+/* バトル中モンスターUIの位置調整用コンテナ */
+.monster-ui-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* 中身を左揃えにする */
+    gap: 5px; /* 名前とHPバーの間隔 */
+    width: 280px; /* コンテナの幅を固定してHPバーの長さを一定にする */
+}
+
+/* モンスター画像のサイズを大きくする */
+#monster-sprite,
+#status-monster-sprite {
+    width: 300px;
+    height: 300px;
+}
+
+/* ★★★★★ START: ここから追加 ★★★★★ */
+.modal-overlay {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    padding: 20px;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+.modal-content {
+    background-color: #f5e8c8;
+    padding: 20px 25px; /* 上下のパディングを少し詰めます */
+    border-radius: 15px;
+    border: 8px solid;
+    border-image: linear-gradient(145deg, #a05a2c, #e08a50, #a05a2c) 1;
+    text-align: center;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px; /* 要素間の隙間を少し詰めます */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    cursor: default;
+}
+#zukan-detail-name {
+    font-size: clamp(1.5rem, 5vw, 2rem);
+    color: #8b4513;
+    margin: 0;
+    font-weight: 800;
+}
+#zukan-detail-sprite {
+    width: 220px; /* サイズを小さくします */
+    height: 220px;
+    margin:  0; /* 上下のマージンを少し詰めます */
+}
+
+/* ★★★★★ START: このスタイルを追加 ★★★★★ */
+#zukan-detail-stats-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 25px; /* No. と HP の間のスペース */
+}
+/* ★★★★★ END: このスタイルを追加 ★★★★★ */
+
+#zukan-detail-hp, #zukan-detail-id {
+    font-size: clamp(1.2rem, 4vw, 1.5rem);
+    font-weight: 700;
+    color: #4a2c0f;
+    margin: 0;
+
+}
+#zukan-detail-description {
+    font-size: clamp(1rem, 3vw, 1.2rem);
+    color: #6b4a2f;
+    margin: 0;
+    line-height: 1.6;
+}
+/* ★★★★★ END: ここまで追加 ★★★★★ */
+
+#title-screen::before {
+    content: ''; /* 擬似要素には必須のプロパティ */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    /* 背景画像の設定 */
+    background-image: url('bg_title.png');
+    background-size: cover; /* コンテナ全体を覆うように調整 */
+    background-position: center; /* 画像を中央に配置 */
+    background-repeat: no-repeat; /* 画像の繰り返しを無効化 */
+
+    /* 透明度を設定して、下のグリッド線を少し見せることも可能 */
+    /* opacity: 0.9; */
+
+    /* ロゴやボタンより後ろに配置するための設定 */
+    z-index: -1;
+}
+
+/* #title-screen 自体に position: relative を設定して、
+   ::before の基準点にする必要がありますが、
+   既に .screen に position: absolute が設定されているため不要です */
+
+   /* あそびかたページ用のスタイル */
+.how-to-play-container {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.5);
+    border: 3px solid #c8bba3;
+    border-radius: 10px;
+    padding: 25px;
+    box-sizing: border-box;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+    text-align: left;
+}
+
+.how-to-play-container h3 {
+    font-size: 1.4rem;
+    color: #8b4513;
+    border-bottom: 2px solid #d2b48c;
+    padding-bottom: 5px;
+    margin-top: 15px;
+    margin-bottom: 10px;
+}
+.how-to-play-container h3:first-child {
+    margin-top: 0;
+}
+
+.how-to-play-container p {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: #4a2c0f;
+    margin: 0 0 10px 10px;
+}
+
+/* ... 既存のスタイル ... */
+
+/* ★★★★★ START: バトルエフェクト用のスタイルを追加 ★★★★★ */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.shake {
+  animation: shake 0.5s;
+}
+
+@keyframes flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.flash {
+  animation: flash 0.5s;
+}
+
+#slash-effect {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200%;
+  height: 20px;
+  background: linear-gradient(to right, transparent, white, transparent);
+  transform: translate(-50%, -50%) rotate(-30deg) scaleX(0);
+  opacity: 0;
+  transform-origin: center;
+}
+
+#slash-effect.active {
+  animation: slash 0.4s ease-out;
+}
+
+@keyframes slash {
+  0% { transform: translate(-50%, -50%) rotate(-30deg) scaleX(0); opacity: 1; }
+  50% { transform: translate(-50%, -50%) rotate(-30deg) scaleX(1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) rotate(-30deg) scaleX(1); opacity: 0; }
+}
+
+#particle-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* 下の要素をクリックできるようにする */
+    overflow: hidden;
+    z-index: 45; /* ★ この行を追加 */
+}
+
+.particle {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background-color: yellow;
+    border-radius: 50%;
+    box-shadow: 0 0 10px gold, 0 0 15px orange;
+    opacity: 1;
+    transition: transform 1s, opacity 1s;
+}
+/* ★★★★★ END: バトルエフェクト用のスタイルを追加 ★★★★★ */
+
+@keyframes charge-effect {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.05);
+    filter: brightness(1.5) drop-shadow(0 0 15px #ffee77);
+  }
+}
+
+#player-sprite.charging {
+  animation: charge-effect 1.5s ease-in-out;
+}
+
+.damage-popup {
+  position: absolute;
+  font-size: 3.5rem; /* 少し大きく */
+  font-weight: 800;
+  color: #ff4444; /* ダメージの赤色 */
+  -webkit-text-stroke: 2px white; /* 白い縁取り */
+  text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.4);
+  pointer-events: none; /* クリックなどを透過させる */
+  z-index: 100;
+  animation: damage-animation 1s ease-out forwards;
+  /* transformを付与してGPUアクセラレーションを有効化 */
+  transform: translate(-50%, -50%); 
+}
+
+@keyframes damage-animation {
+  0% {
+    transform: translate(-50%, -50%) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) translateY(-60px); /* 少し大きく動かす */
+    opacity: 0;
+  }
+}
+
+/* ★★★★★ START: バトル開始アニメーション用のスタイルを追加 ★★★★★ */
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100vw);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100vw);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+#monster-sprite.slide-in-left {
+  animation: slideInFromLeft 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+#player-sprite.slide-in-right {
+  animation: slideInFromRight 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+/* ★★★★★ END: バトル開始アニメーション用のスタイルを追加 ★★★★★ */
+
+/* ★★★★★ START: コンプリートメッセージ用のスタイルを追加 ★★★★★ */
+#complete-message-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: none; /* 初期状態は非表示 */
+    justify-content: center;
+    align-items: center;
+    z-index: 50; /* 他の要素より手前に表示 */
+}
+
+#complete-message-container.show {
+    display: flex; /* このクラスが付くと表示される */
+}
+
+#complete-message-text {
+    font-size: clamp(3rem, 10vw, 4.5rem); /* 画面サイズに合わせて調整 */
+    color: #FFD700; /* ゴールド */
+    text-align: center;
+    text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.8);
+    font-weight: 800;
+    line-height: 1.4;
+    transform: scale(0.5);
+    opacity: 0;
+    animation: complete-zoom-in 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes complete-zoom-in {
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+/* ★★★★★ END: コンプリートメッセージ用のスタイルを追加 ★★★★★ */
+
+/* ... (既存のスタイル) ... */
+
+/* ★★★★★ START: プレイヤー切り替えUIのスタイルを追加 ★★★★★ */
+#player-switch-area {
+    margin: 30px 0;
+    padding: 15px;
+    background: rgba(0,0,0,0.05);
+    border-radius: 10px;
+    border: 1px solid #c8bba3;
+    width: 90%;
+    max-width: 450px;
+    box-sizing: border-box;
+}
+
+#player-switch-area .support-text {
+    margin-bottom: 10px;
+}
+
+.player-switch-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+#player-switch-area .btn {
+    transform: scale(0.9);
+    margin: 0;
+    background: linear-gradient(to bottom, #c0c0c0, #a9a9a9 49%, #888 51%);
+    box-shadow: 0 6px 0 #666, 0 8px 10px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.3);
+}
+
+#player-switch-area .btn.active-player {
+    background: linear-gradient(to bottom, #f8c97c, #f0ad4e 49%, #e6952c 51%);
+    box-shadow: 0 6px 0 #c8872b, 0 8px 10px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.3);
+    pointer-events: none; /* 現在のプレイヤーはクリックできないようにする */
+}
+/* ★★★★★ END: プレイヤー切り替えUIのスタイルを追加 ★★★★★ */

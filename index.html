@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>しゅくだいクエスト</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="game-container">
+        <!-- タイトル画面 -->
+        <div id="title-screen" class="screen active">
+             <!-- ★★★★★ START: この要素を追加 ★★★★★ -->
+            <div id="title-player-name"></div>
+            <!-- ★★★★★ END: この要素を追加 ★★★★★ -->
+            <img src="logo.png" alt="しゅくだいクエスト" id="title-logo">
+            <div class="menu-buttons">
+                <button id="start-homework-button" class="btn btn-large">しゅくだいを はじめる</button>
+                <button id="confirm-button" class="btn">かくにん</button>
+            </div>
+        </div>
+
+        <!-- タイマー設定画面 -->
+        <div id="timer-setting-screen" class="screen">
+            <h2 class="prompt">なん分 なん秒で おわらせる？</h2>
+            <p class="support-text">パパやママとそうだんして時間を決めよう！</p>
+            <div class="picker-container">
+                <div class="picker-column" id="minutes-picker"><div class="picker-list"></div></div>
+                <div class="picker-label">分</div>
+                <div class="picker-column" id="seconds-picker"><div class="picker-list"></div></div>
+                <div class="picker-label">秒</div>
+                <div class="picker-highlight"></div>
+            </div>
+            <div class="timer-setting-buttons">
+                <button id="start-timer-button" class="btn btn-large">スタート！</button>
+                <button id="back-to-title-button" class="btn btn-secondary">さいしょにもどる</button>
+            </div>
+            <div id="current-time-container">いまのじかん: <span id="current-time">--:--</span></div>
+        </div>
+
+        <!-- リザルト画面 -->
+        <div id="result-screen" class="screen">
+            <h2 id="result-title">けっかはっぴょう！</h2>
+            <div id="time-power-message" class="result-item">のこり時間パワー: <span>0</span></div>
+            <div id="bonus-calc-message" class="result-calc"></div>
+            <div id="bonus-power-message" class="result-item">スタート時間ボーナスパワー: <span>0</span></div>
+            <div id="total-damage-message">ごうけいパワー: <span>0</span></div>
+            <button id="go-to-battle-button" class="btn btn-large">バトルへ！</button>
+        </div>
+
+        <!-- バトル画面 -->
+        <div id="battle-screen" class="screen">
+            <!-- ★★★★★ START: この要素を追加 ★★★★★ -->
+            <div id="complete-message-container">
+                <div id="complete-message-text">しゅくだいモンスター<br>コンプリート！</div>
+            </div>
+            <!-- ★★★★★ END: この要素を追加 ★★★★★ -->
+            <div id="particle-container"></div>
+            <div class="battle-stage">
+                <div class="character-area" id="monster-area">
+                    <div class="monster-ui-container">
+                        <div id="monster-name" class="character-name"></div>
+                        <div class="hp-bar-container">
+                            <div class="hp-bar-label">HP</div>
+                            <div id="monster-hp-bar" class="hp-bar"><div id="monster-hp-value" class="hp-value"></div></div>
+                            <span id="monster-hp-text" class="hp-text"></span>
+                        </div>
+                    </div>
+                    <div id="monster-sprite" class="character-sprite">
+                        <div id="slash-effect"></div>
+                    </div>
+                </div>
+                <div class="character-area" id="player-area">
+                    <div id="player-sprite" class="character-sprite"></div>
+                    <div id="player-name" class="character-name"></div>
+                </div>
+            </div>
+            <div id="message-window">
+                <p id="message-text"></p>
+                <button id="next-battle-button" class="btn" style="display: none;">タイトルへもどる</button>
+            </div>
+        </div>
+        
+        <!-- かくにん画面 (コンテナ) -->
+        <div id="confirm-screen" class="screen">
+            <div class="confirm-header">
+                <button id="prev-page-button" class="page-nav-btn">◀</button>
+                <h2 id="confirm-page-title" class="screen-title"></h2>
+                <button id="confirm-back-button" class="btn btn-secondary">もどる</button>
+                <button id="next-page-button" class="page-nav-btn">▶</button>
+            </div>
+            <div id="confirm-pages-container">
+                <!-- ページ1: これまでのがんばり -->
+                <div id="history-page" class="confirm-page">
+                    <div id="history-list" class="list-container"></div>
+                </div>
+                <!-- ページ2: モンスターずかん -->
+                <div id="zukan-page" class="confirm-page">
+                    <div id="zukan-grid" class="grid-container"></div>
+                    <div id="zukan-detail-modal" class="modal-overlay">
+                        <div class="modal-content">
+                            <h3 id="zukan-detail-name"></h3>
+                            <div id="zukan-detail-sprite" class="character-sprite"></div>
+
+                            <div id="zukan-detail-stats-container">
+                                <p id="zukan-detail-id"></p>
+                                <p id="zukan-detail-hp"></p>
+                            </div>
+                            <p id="zukan-detail-description"></p>
+                        </div>
+                    </div>
+                </div>
+                <!-- ページ3: いまのバトル -->
+                <div id="status-check-page" class="confirm-page">
+                    <div id="status-check-display">
+                        <div id="status-monster-name"></div>
+                        <div id="status-hp-bar-container">
+                            <div class="hp-bar-label">HP</div>
+                            <div id="status-monster-hp-bar" class="hp-bar"><div id="status-monster-hp-value" class="hp-value"></div></div>
+                            <span id="status-monster-hp-text" class="hp-text"></span>
+                        </div>
+                        <div id="status-monster-sprite" class="character-sprite"></div>
+                    </div>
+                    <div id="no-current-battle-message" class="support-text" style="display: none; margin: auto;">
+                        いまは たたかうモンスターが いないよ。<br>つぎのしゅくだいを がんばろう！
+                    </div>
+                </div>
+                <!-- ページ4: せってい -->
+                <div id="name-setting-page" class="confirm-page">
+                    <p class="support-text">あたらしいなまえをいれてね</p>
+                    <input type="text" id="name-input" class="rpg-input" maxlength="8">
+                    <button id="save-name-button" class="btn">このなまえにする</button>
+                    <!-- ★★★★★ START: このブロックを追加 ★★★★★ -->
+                    <div id="player-switch-area">
+                        <p class="support-text">プレイヤーをきりかえる</p>
+                        <div class="player-switch-buttons">
+                            <button id="switch-player-1-button" class="btn">プレイヤー1</button>
+                            <button id="switch-player-2-button" class="btn">プレイヤー2</button>
+                        </div>
+                    </div>
+                    <!-- ★★★★★ END: このブロックを追加 ★★★★★ -->
+                    <button id="reset-button" class="btn btn-danger">初期化</button>
+                    <div id="reset-confirmation-area" style="display: none;">
+                        <!-- 初期化の確認UIがここにJSで挿入されます -->
+                    </div>
+                </div>
+                <!-- ページ5: あそびかた -->
+                <div id="how-to-play-page" class="confirm-page">
+                    <div class="how-to-play-container">
+                        <h3>① もくひょう時間を きめよう</h3>
+                        <p>パパや ママと そうだんして、しゅくだいが 何分で おわるか もくひょうを きめてね。</p>
+                        
+                        <h3>② しゅくだいを がんばろう</h3>
+                        <p>「スタート！」をおしたら、しゅくだいに しゅうちゅう！</p>
+                        
+                        <h3>③ モンスターと バトル！</h3>
+                        <p>しゅくだいが 早く おわると、のこった 時間が こうげきパワーに なるよ。夜 早く しゅくだいを はじめると、さらに ボーナスパワーが もらえる！</p>
+                        
+                        <h3>④ 図かんを うめよう</h3>
+                        <p>たくさんの モンスターを たおして、モンスター図かんの コンプリートを めざそう！</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 集中フェーズ画面 -->
+    <div id="concentration-screen">
+        <div id="timer-display">00:00</div>
+        <div class="concentration-buttons">
+            <button id="cancel-timer-button" class="btn btn-secondary">もどる</button>
+            <button id="stop-timer-button" class="btn btn-large">おわり！</button>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
