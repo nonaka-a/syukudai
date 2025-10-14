@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 画面要素の取得 ---
     const ui = {
+        fullscreenButton: document.getElementById('fullscreen-button'),
         titlePlayerName: document.getElementById('title-player-name'), 
         gameContainer: document.getElementById('game-container'),
         timerDisplay: document.getElementById('timer-display'),
@@ -87,6 +88,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const ITEM_HEIGHT = 60;
     
     // --- 関数定義 ---
+    const toggleFullScreen = () => {
+        const docEl = document.documentElement;
+        const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
+        const cancelFullScreen = document.exitFullscreen || document.mozCancelFullScreen || document.webkitExitFullscreen || document.msExitFullscreen;
+
+        const isFullScreen = document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+
+        if (!isFullScreen) {
+            if (requestFullScreen) {
+                requestFullScreen.call(docEl);
+            }
+        } else {
+            if (cancelFullScreen) {
+                cancelFullScreen.call(document);
+            }
+        }
+    };
+
+    const handleFullScreenChange = () => {
+        const isFullScreen = !!(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+        document.body.classList.toggle('fullscreen', isFullScreen);
+    };
     const showDamagePopup = (damage, element) => {
         const popup = document.createElement('span');
         popup.textContent = damage;
@@ -694,6 +717,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     ui.switchPlayer1Button.addEventListener('click', () => switchPlayer(1));
     ui.switchPlayer2Button.addEventListener('click', () => switchPlayer(2));
+    // ★★★★★ START: このイベントリスナーを追加 ★★★★★
+    ui.fullscreenButton.addEventListener('click', toggleFullScreen);
+    document.addEventListener('fullscreenchange', handleFullScreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullScreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullScreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullScreenChange);
+    // ★★★★★ END: このイベントリスナーを追加 ★★★★★
 
     // --- 初期化処理 ---
     initializeApp();

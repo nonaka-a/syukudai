@@ -563,3 +563,59 @@ body { font-family: 'M PLUS Rounded 1c', sans-serif; background: radial-gradient
     pointer-events: none; /* 現在のプレイヤーはクリックできないようにする */
 }
 /* ★★★★★ END: プレイヤー切り替えUIのスタイルを追加 ★★★★★ */
+
+/* ★★★★★ START: フルスクリーンボタン用のスタイルを追加 ★★★★★ */
+.top-right-buttons {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 20;
+}
+
+.icon-btn {
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.2s;
+}
+.icon-btn:hover {
+    background: rgba(0, 0, 0, 0.4);
+}
+
+/* 拡大アイコン (デフォルト) */
+#fullscreen-button::before,
+#fullscreen-button::after {
+    content: '';
+    position: absolute;
+    width: 5px;
+    height: 15px;
+    background-color: white;
+    transition: transform 0.3s ease-in-out;
+}
+#fullscreen-button::before {
+    top: 10px;
+    left: 10px;
+    transform-origin: top left;
+    transform: rotate(45deg);
+}
+#fullscreen-button::after {
+    bottom: 10px;
+    right: 10px;
+    transform-origin: bottom right;
+    transform: rotate(45deg);
+}
+
+/* 縮小アイコン (フルスクリーン時) */
+body.fullscreen #fullscreen-button::before {
+    transform-origin: top left;
+    transform: rotate(-135deg);
+}
+body.fullscreen #fullscreen-button::after {
+    transform-origin: bottom right;
+    transform: rotate(-135deg);
+}
+/* ★★★★★ END: フルスクリーンボタン用のスタイルを追加 ★★★★★ */
