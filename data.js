@@ -29,7 +29,7 @@ const SPRITESHEET_ATLAS = {
 // --- モンスターデータの元データ（IDと画像ファイル名は自動で付与） ---
 const MONSTERS_DATA_RAW = [
     { name: 'とげまい', maxHp: 50, description: 'いたずらがだいすき。\n今日も何かいたずらすることが ないかたくらんでいる。', background: 'field_day.png' },
-    { name: 'カニ', maxHp: 60, description: 'はまべをよこぎる かに。\nとにかくはやい。', background: 'beach.png' },
+    { name: 'カニ', maxHp: 60, description: 'はまべをよこぎる かに。とにかくはやい。\nきをつけないと、ぶつかってくるよ！', background: 'beach.png' },
     { name: 'きんにくマッチョ', maxHp: 100, description: '「モンスターじゃないぞ！」ともんくをいっている。\nみなみの島のつよいマッチョ。', background: 'field_day.png' },
     { name: 'ボスとげまい', maxHp: 120, description: 'とげまいたちの中でも大きなとげまい。\nトゲトゲにさわるといたい。', background: 'field_day.png' },
     { name: 'うみとげまい', maxHp: 130, description: 'うみのなかをおよぐとけまい。\nゴーグルがおきにいり。', background: 'beach.png' },
@@ -80,7 +80,7 @@ const MONSTERS_DATA_RAW = [
     { name: 'ゴーレム', maxHp:210, description: 'どうくつのまもりがみ。\nとってもかたくて、がんじょう。', background: 'cave.png' },
     { name: 'ドラゴン', maxHp: 220, description: 'そらとぶドラゴン。\n口から火をふくことができる。', background: 'field_night.png' },
     { name: 'デーモン', maxHp: 230, description: 'わるいアクマ。\nつかまったらきみもアクマにされちゃうぞ。', background: 'castle.png' },
-    { name: 'うみぼうず', maxHp: 240, description: 'うみのかみさま。\nとっても大きくてうみであそぶのが大好き。', background: 'beach.png' },
+    { name: 'うみぼうず', maxHp: 240, description: 'うみのかみさま。\nとにかく大きくて、うみであそぶのが大好き。', background: 'beach.png' },
     { name: 'しゅくだいまおう', maxHp: 250, description: 'すべてのしゅくだいのおおもと。さいごにしてさいきょうのてき。コンプリートおめでとう！', background: 'castle.png' },
 ];
 
