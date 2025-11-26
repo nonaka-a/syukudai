@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', () => {
     // --- グローバル変数 ---
     let totalDamageToDeal = 0;
@@ -6,10 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const CONFIRM_PAGE_TITLES = ['これまでのがんばり', 'モンスターずかん', 'いまのバトル', 'せってい', 'あそびかた'];
     let resetQuizAnswer = 0;
     let BATTLE_ORDER = [];
+    let isSwitchingPlayer = false; // ★追加：プレイヤー切り替え中のロックフラグ
     
     // セーブデータ管理用の変数
     let currentSaveSlot = 1;
-    const SAVE_DATA_KEY_PREFIX = 'shukudaiQuestData_'; // プロジェクト名変更により、キープレフィックスも変更しても良いが、既存のセーブデータ互換性のため今回は維持
+    const SAVE_DATA_KEY_PREFIX = 'shukudaiQuestData_'; 
     const LAST_SLOT_KEY = 'shukudaiQuestLastSlot';
 
     const MONSTERS = MONSTERS_DATA;
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         damage: new Audio('sounds/se_damage.mp3'),
         defeat: new Audio('sounds/se_defeat.mp3'),
         fanfare: new Audio('sounds/se_fanfare.mp3'),
-        charge: new Audio('sounds/se_charge.mpm3')
+        charge: new Audio('sounds/se_charge.mp3')
     };
     sounds.bgmBattle.loop = true;
     sounds.bgmBattle.volume = 0.5;
@@ -167,11 +167,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const switchScreen = (screenName) => {
         Object.values(screens).forEach(s => s.classList.remove('active'));
         screens[screenName].classList.add('active');
-        // ★★★★★ START: このif文を追加 ★★★★★
         if (screenName === 'title') {
             ui.titlePlayerName.textContent = `${gameState.player.name} の`;
         }
-        // ★★★★★ END: このif文を追加 ★★★★★
         if (screenName === 'timerSetting') {
             updateCurrentTime();
             gameState.timer.currentTimeInterval = setInterval(updateCurrentTime, 1000);
@@ -195,26 +193,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateCurrentTime = () => { ui.currentTime.textContent = format12HourTime(new Date()); };
     
     const saveGameData = () => {
-        const dataToSave = { 
-            player: gameState.player, 
-            currentBattleIndex: gameState.currentBattleIndex,
-            monstersStatus: gameState.monstersStatus, 
-            unlockedMonsters: gameState.unlockedMonsters, 
-            homeworkHistory: gameState.homeworkHistory 
-        };
-        localStorage.setItem(`${SAVE_DATA_KEY_PREFIX}${currentSaveSlot}`, JSON.stringify(dataToSave));
+        try {
+            const dataToSave = { 
+                player: gameState.player, 
+                currentBattleIndex: gameState.currentBattleIndex,
+                monstersStatus: gameState.monstersStatus, 
+                unlockedMonsters: gameState.unlockedMonsters, 
+                homeworkHistory: gameState.homeworkHistory 
+            };
+            localStorage.setItem(`${SAVE_DATA_KEY_PREFIX}${currentSaveSlot}`, JSON.stringify(dataToSave));
+        } catch (e) {
+            console.error("セーブに失敗しました:", e);
+        }
     };
 
     const loadGameData = () => {
         const savedData = localStorage.getItem(`${SAVE_DATA_KEY_PREFIX}${currentSaveSlot}`);
         const defaultData = createDefaultGameState();
         if (savedData) {
-            const parsedData = JSON.parse(savedData);
-            gameState.player = parsedData.player || defaultData.player;
-            gameState.currentBattleIndex = parsedData.currentBattleIndex || defaultData.currentBattleIndex;
-            gameState.monstersStatus = parsedData.monstersStatus || defaultData.monstersStatus;
-            gameState.unlockedMonsters = parsedData.unlockedMonsters || defaultData.unlockedMonsters;
-            gameState.homeworkHistory = parsedData.homeworkHistory || defaultData.homeworkHistory;
+            try {
+                const parsedData = JSON.parse(savedData);
+                gameState.player = parsedData.player || defaultData.player;
+                gameState.currentBattleIndex = parsedData.currentBattleIndex || defaultData.currentBattleIndex;
+                gameState.monstersStatus = parsedData.monstersStatus || defaultData.monstersStatus;
+                gameState.unlockedMonsters = parsedData.unlockedMonsters || defaultData.unlockedMonsters;
+                gameState.homeworkHistory = parsedData.homeworkHistory || defaultData.homeworkHistory;
+            } catch (e) {
+                console.error("セーブデータの読み込みに失敗しました:", e);
+                Object.assign(gameState, defaultData);
+            }
         } else {
             Object.assign(gameState, defaultData);
         }
@@ -226,12 +233,32 @@ document.addEventListener('DOMContentLoaded', () => {
         location.reload();
     };
 
+    // ★★★ 変更点：競合状態（Race Condition）を防ぐための修正 ★★★
     const switchPlayer = (slotNumber) => {
-        if (slotNumber === currentSaveSlot) return;
+        // 処理中、または同じスロットが押された場合は何もしない
+        if (isSwitchingPlayer || slotNumber === currentSaveSlot) return;
+
+        // 処理が始まったらロックをかけ、ボタンを無効化する
+        isSwitchingPlayer = true;
+        ui.switchPlayer1Button.disabled = true;
+        ui.switchPlayer2Button.disabled = true;
+        
+        // ユーザーに処理中であることを視覚的に伝える
+        const buttonToUpdate = slotNumber === 1 ? ui.switchPlayer1Button : ui.switchPlayer2Button;
+        buttonToUpdate.textContent = 'よみこみちゅう…';
+
+        // 現在のデータを確実にセーブ
         saveGameData();
+        
+        // 新しいスロット番号を設定
         currentSaveSlot = slotNumber;
         localStorage.setItem(LAST_SLOT_KEY, currentSaveSlot);
-        location.reload();
+        
+        // 画面をリロードして、新しいデータをクリーンな状態で読み込む
+        // 少しだけ待ってからリロードすると、ブラウザがボタンの表示を更新する余裕が生まれる
+        setTimeout(() => {
+            location.reload();
+        }, 100);
     };
 
     const updatePlayerSwitchUI = () => {
@@ -241,6 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updateHpBar = (monster, isStatusCheck = false) => {
         const monsterStatus = gameState.monstersStatus.find(s => s.id === monster.id);
+        if (!monsterStatus) return; // 安全対策
         const hpPercentage = (monsterStatus.currentHp / monster.maxHp) * 100;
         const hpText = `${monsterStatus.currentHp} / ${monster.maxHp}`;
         
@@ -574,7 +602,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- 新しい関数: 画像プリロード ---
     const preloadImages = (imageUrls) => {
         const promises = imageUrls.map(url => {
             return new Promise((resolve, reject) => {
@@ -583,7 +610,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 img.onload = () => resolve();
                 img.onerror = () => {
                     console.warn(`画像の読み込みに失敗しました: ${url}`);
-                    resolve(); // 失敗しても他の画像読み込みをブロックしない
+                    resolve();
                 };
             });
         });
@@ -596,6 +623,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentSaveSlot = parseInt(lastSlot, 10);
         }
         
+        // ★★★ 登場順ロジックは変更なし（HPのみでソート） ★★★
         BATTLE_ORDER = MONSTERS
             .map(monster => ({ id: monster.id, maxHp: monster.maxHp }))
             .sort((a, b) => a.maxHp - b.maxHp)
@@ -636,24 +664,22 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.zukanModalContent.addEventListener('click', (e) => e.stopPropagation());
         ui.completeMessageContainer.addEventListener('click', () => { ui.completeMessageContainer.classList.remove('show'); });
         
-        // --- 画像プリロードの実行 ---
         const backgroundUrls = MONSTERS
             .filter(m => m.background)
             .map(m => `BG/${m.background}`);
         
-        // タイトル画面の背景もプリロード
         backgroundUrls.push('bg_title.png');
-        backgroundUrls.push('bg_battle.png'); // デフォルトのバトル背景
+        backgroundUrls.push('bg_battle.png'); 
 
         console.log('背景画像をプリロード中...');
-        preloadImages(Array.from(new Set(backgroundUrls))) // 重複を排除
+        preloadImages(Array.from(new Set(backgroundUrls))) 
             .then(() => {
                 console.log('背景画像のプリロードが完了しました。');
-                switchScreen('title'); // プリロード完了後にタイトル画面を表示
+                switchScreen('title');
             })
             .catch(error => {
                 console.error('背景画像のプリロード中にエラーが発生しました:', error);
-                switchScreen('title'); // エラー時もタイトル画面を表示
+                switchScreen('title');
             });
     };
     
@@ -668,18 +694,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     buttons.confirmBack.addEventListener('click', () => switchScreen('title'));
     buttons.goToBattle.addEventListener('click', () => {
+        if (gameState.currentBattleIndex >= BATTLE_ORDER.length) {
+            startBattle(totalDamageToDeal);
+            return;
+        }
         const currentMonsterId = BATTLE_ORDER[gameState.currentBattleIndex];
         const monster = MONSTERS.find(m => m.id === currentMonsterId);
         
-        // バトル開始前に背景画像をプリロード
         const bgUrl = (monster && monster.background) ? `BG/${monster.background}` : 'bg_battle.png';
         
-        // プリロードの完了を待ってからバトルを開始
         preloadImages([bgUrl]).then(() => {
             startBattle(totalDamageToDeal);
         }).catch(error => {
             console.error('バトル背景のプリロードに失敗しました:', error);
-            // エラーが発生してもバトルは開始する
             startBattle(totalDamageToDeal);
         });
     });
@@ -702,7 +729,7 @@ document.addEventListener('DOMContentLoaded', () => {
             gameState.player.name = newName;
             saveGameData();
             alert('なまえをへんこうしたよ！');
-            ui.titlePlayerName.textContent = `${gameState.player.name} の`; // タイトル画面の名前も更新
+            ui.titlePlayerName.textContent = `${gameState.player.name} の`;
         } else {
             alert('なまえは1～8もじでいれてね。');
         }
@@ -769,15 +796,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     ui.switchPlayer1Button.addEventListener('click', () => switchPlayer(1));
     ui.switchPlayer2Button.addEventListener('click', () => switchPlayer(2));
-    // ★★★★★ START: このイベントリスナーを追加 ★★★★★
+    
     ui.fullscreenButton.addEventListener('click', toggleFullScreen);
     document.addEventListener('fullscreenchange', handleFullScreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullScreenChange);
     document.addEventListener('mozfullscreenchange', handleFullScreenChange);
     document.addEventListener('MSFullscreenChange', handleFullScreenChange);
-    // ★★★★★ END: このイベントリスナーを追加 ★★★★★
 
     // --- 初期化処理 ---
     initializeApp();
 });
-        
